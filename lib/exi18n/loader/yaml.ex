@@ -22,12 +22,18 @@ if Code.ensure_loaded?(YamlElixir) do
         {:error, "Failed to open file test/fixtures/invalid.yml"}
     """
     @impl true
-    def load(locale, options \\ %{}) do
-      with path <- Path.join([resolve_path(options.path), "#{locale}.yml"]),
+    def load(locale, %{path: path} = _options) do
+      path =
+        case path do
+          {app, dir} -> Application.app_dir(app, dir)
+          path -> path
+        end
+
+      with path <- Path.join([resolve_path(path), "#{locale}.yml"]),
            {:ok, translations} <- YamlElixir.read_from_file(path) do
         {:ok, translations}
       else
-        {:error, _} -> {:error, "Failed to open file #{options.path}/#{locale}.yml"}
+        {:error, _} -> {:error, "Failed to open file #{path}/#{locale}.yml"}
       end
     end
 
